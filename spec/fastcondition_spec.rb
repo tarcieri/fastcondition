@@ -9,7 +9,7 @@ describe FastCondition do
     it "returns self if something is waiting for a signal" do
       mutex = Mutex.new
       thread = Thread.new do
-        m.synchronize do
+        mutex.synchronize do
           subject.wait(mutex)
         end
       end

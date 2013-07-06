@@ -1,2 +1,9 @@
-require "fastcondition/version"
-require "fastcondition_ext"
+require 'thread'
+
+if RUBY_ENGINE == "ruby"
+  require "fastcondition_ext"
+end
+
+if !defined?(FastCondition)
+  FastCondition = ConditionVariable
+end

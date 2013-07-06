@@ -1,11 +1,8 @@
 # coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'fastcondition/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "fastcondition"
-  spec.version       = FastCondition::VERSION
+  spec.version       = "1.0.0.pre"
   spec.authors       = ["Tony Arcieri"]
   spec.email         = ["tony.arcieri@gmail.com"]
   spec.description   = "Faster ConditionVariables for MRI"
