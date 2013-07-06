@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = FastCondition::VERSION
   spec.authors       = ["Tony Arcieri"]
   spec.email         = ["tony.arcieri@gmail.com"]
-  spec.description   = "Faster ConditionVariables for pthreaded platforms"
+  spec.description   = "Faster ConditionVariables for MRI"
   spec.summary       = "A reimplementation of ConditionVariable that uses pthread conditions"
   spec.homepage      = "https://github.com/tarcieri/fastcondition"
   spec.license       = "MIT"
