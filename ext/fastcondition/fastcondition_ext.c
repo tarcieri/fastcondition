@@ -4,7 +4,9 @@
 #include <pthread.h>
 #include <assert.h>
 
+#ifdef HAVE_RUBY_THREAD_H
 #include "ruby/thread.h"
+#endif
 
 typedef struct fast_condition_struct
 {
@@ -21,7 +23,11 @@ static void FastCondition_free(fast_condition_t *cond);
 static VALUE FastCondition_signal(VALUE self);
 static VALUE FastCondition_wait(VALUE self, VALUE mutex);
 
+#ifdef HAVE_RUBY_THREAD_H
 static void *FastCondition_unlocked_wait(void *ptr);
+#else
+static VALUE FastCondition_unlocked_wait(void *ptr);
+#endif
 
 void Init_fastcondition_ext()
 {
@@ -78,7 +84,11 @@ static VALUE FastCondition_wait(VALUE self, VALUE mutex)
 
     /* FIXME: RUBY_UBF_IO is probably not appropriate here. We should signal the pthread_cond_t
        in order to unblock it. This might cause problems inside signal handlers */
+#ifdef HAVE_RUBY_THREAD_H
     rb_thread_call_without_gvl(FastCondition_unlocked_wait, (void *)cond, RUBY_UBF_IO, 0);
+#else
+    rb_thread_blocking_region(FastCondition_unlocked_wait, (void *)cond, RUBY_UBF_IO, 0);
+#endif
 
     rb_mutex_lock(mutex);
     assert(pthread_mutex_unlock(&cond->mutex) == 0);
@@ -86,13 +96,21 @@ static VALUE FastCondition_wait(VALUE self, VALUE mutex)
     return Qnil;
 }
 
+#ifdef HAVE_RUBY_THREAD_H
 static void *FastCondition_unlocked_wait(void *ptr)
+#else
+static VALUE FastCondition_unlocked_wait(void *ptr)
+#endif
 {
     fast_condition_t *cond = (fast_condition_t *)ptr;
 
     assert(pthread_cond_wait(&cond->cond, &cond->mutex) == 0);
 
+#ifdef HAVE_RUBY_THREAD_H
     return NULL;
+#else
+    return Qnil;
+#endif
 }
 
 #else
