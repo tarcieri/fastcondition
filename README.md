@@ -1,7 +1,7 @@
 # FastCondition
 
-The `FastCondition` class is a reimplementation of the ConditionVariable API
-using pthread conditions (where available).
+The `FastCondition` class is a reimplementation of the Ruby ConditionVariable
+API using pthread conditions (where available).
 
 FastCondition only works on MRI when compiled on an OS that implements the
 pthreads API. If installed on a Ruby that isn't MRI, or on an OS that doesn't
