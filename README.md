@@ -1,6 +1,15 @@
-# Fastcondition
+# FastCondition
 
-TODO: Write a gem description
+The `FastCondition` class is a reimplementation of the ConditionVariable API
+using pthread conditions (where available).
+
+FastCondition only works on MRI when compiled on an OS that implements the
+pthreads API. If installed on a Ruby that isn't MRI, or on an OS that doesn't
+support pthreads, the gem will simply use `ConditionVariable` as the
+`FastCondition` implementation.
+
+This means that FastCondition will work on all Rubies, even JRuby, but will use
+native ConditionVariable implementations on these platforms.
 
 ## Installation
 
