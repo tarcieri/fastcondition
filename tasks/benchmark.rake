@@ -6,13 +6,24 @@ task :benchmark do
     mutex = Mutex.new
     cond  = klass.new
 
-    mutex.synchronize do
-      Thread.new do
-        iterations.times { |n| mutex.synchronize { cond.signal } }
-      end
+    mutex.lock
 
-      iterations.times { cond.wait(mutex) }
+    Thread.new do
+      iterations.times do
+        mutex.lock
+        begin
+          cond.signal
+        ensure
+          mutex.unlock
+        end
+      end
     end
+
+    iterations.times do
+      cond.wait(mutex)
+    end
+
+    mutex.unlock
   end
 
   Benchmark.ips do |ips|
