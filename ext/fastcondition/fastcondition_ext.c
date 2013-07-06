@@ -8,17 +8,17 @@
 #include "ruby/thread.h"
 #endif
 
-typedef struct fast_condition_struct
+struct fast_condition_struct
 {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-} fast_condition_t;
+};
 
 static VALUE cFastCondition = Qnil;
 
 static VALUE FastCondition_allocate(VALUE klass);
-static void FastCondition_mark(fast_condition_t *cond);
-static void FastCondition_free(fast_condition_t *cond);
+static void FastCondition_mark(struct fast_condition_struct *cond);
+static void FastCondition_free(struct fast_condition_struct *cond);
 
 static VALUE FastCondition_signal(VALUE self);
 static VALUE FastCondition_wait(VALUE self, VALUE mutex);
@@ -40,20 +40,20 @@ void Init_fastcondition_ext()
 
 static VALUE FastCondition_allocate(VALUE klass)
 {
-    fast_condition_t *cond;
+    struct fast_condition_struct *cond;
 
-    cond = (fast_condition_t *)xmalloc(sizeof(fast_condition_t));
+    cond = (struct fast_condition_struct *)xmalloc(sizeof(struct fast_condition_struct));
     pthread_mutex_init(&cond->mutex, NULL);
     pthread_cond_init(&cond->cond, NULL);
 
     return Data_Wrap_Struct(klass, FastCondition_mark, FastCondition_free, cond);
 }
 
-static void FastCondition_mark(fast_condition_t *cond)
+static void FastCondition_mark(struct fast_condition_struct *cond)
 {
 }
 
-static void FastCondition_free(fast_condition_t *cond)
+static void FastCondition_free(struct fast_condition_struct *cond)
 {
     pthread_mutex_destroy(&cond->mutex);
     pthread_cond_destroy(&cond->cond);
@@ -62,8 +62,8 @@ static void FastCondition_free(fast_condition_t *cond)
 
 static VALUE FastCondition_signal(VALUE self)
 {
-    fast_condition_t *cond;
-    Data_Get_Struct(self, fast_condition_t, cond);
+    struct fast_condition_struct *cond;
+    Data_Get_Struct(self, struct fast_condition_struct, cond);
 
     pthread_cond_signal(&cond->cond);
     return self;
@@ -71,8 +71,8 @@ static VALUE FastCondition_signal(VALUE self)
 
 static VALUE FastCondition_wait(VALUE self, VALUE mutex)
 {
-    fast_condition_t *cond;
-    Data_Get_Struct(self, fast_condition_t, cond);
+    struct fast_condition_struct *cond;
+    Data_Get_Struct(self, struct fast_condition_struct, cond);
 
     /* Assume the mutex is uncontended and try a nonblocking operation to
        aquire it. This sidesteps the need to release the GVL first. This is
@@ -102,7 +102,7 @@ static void *FastCondition_unlocked_wait(void *ptr)
 static VALUE FastCondition_unlocked_wait(void *ptr)
 #endif
 {
-    fast_condition_t *cond = (fast_condition_t *)ptr;
+    struct fast_condition_struct *cond = (struct fast_condition_struct *)ptr;
 
     assert(pthread_cond_wait(&cond->cond, &cond->mutex) == 0);
 
