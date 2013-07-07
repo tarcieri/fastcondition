@@ -5,25 +5,27 @@ task :benchmark do
   def signal_benchmark(klass, iterations)
     mutex = Mutex.new
     cond  = klass.new
+    n     = 0
 
-    mutex.lock
-
-    Thread.new do
-      iterations.times do
+    thread = Thread.new do
+      running = true
+      while running
         mutex.lock
-        begin
-          cond.signal
-        ensure
-          mutex.unlock
-        end
+        cond.wait(mutex)
+        n += 1
+        running = false if n >= iterations
+        mutex.unlock
       end
     end
 
-    iterations.times do
-      cond.wait(mutex)
+    loop do
+      value = nil
+      mutex.lock
+      value = n
+      cond.signal if value < iterations
+      mutex.unlock
+      break if value >= iterations
     end
-
-    mutex.unlock
   end
 
   Benchmark.ips do |ips|
