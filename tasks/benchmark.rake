@@ -2,39 +2,44 @@ task :benchmark do
   require "benchmark/ips"
   require "fastcondition"
 
-  def signal_benchmark(klass, iterations)
-    mutex = Mutex.new
-    cond  = klass.new
-    n     = 0
+  class Trigger
+    def self.benchmark(condition_class, n)
+      trigger = new(condition_class)
+      thread = Thread.new { n.times { trigger.wait } }
+      n.times { trigger.fire }
+      thread.join
+    end
 
-    thread = Thread.new do
-      running = true
-      while running
-        mutex.lock
-        cond.wait(mutex)
-        n += 1
-        running = false if n >= iterations
-        mutex.unlock
+    def initialize(condition_class)
+      @mutex = Mutex.new
+      @cond  = condition_class.new
+
+      @fired_count    = 0
+      @consumed_count = 0
+    end
+
+    def fire
+      @mutex.synchronize do
+        @cond.signal if @fired_count <= @consumed_count
+        @fired_count += 1
       end
     end
 
-    loop do
-      value = nil
-      mutex.lock
-      value = n
-      cond.signal if value < iterations
-      mutex.unlock
-      break if value >= iterations
+    def wait
+      @mutex.synchronize do
+        @cond.wait(@mutex) if @fired_count <= @consumed_count
+        @consumed_count += 1
+      end
     end
   end
 
   Benchmark.ips do |ips|
     ips.report("ConditionVariable") do |n|
-      signal_benchmark(ConditionVariable, n)
+      Trigger.benchmark(ConditionVariable, n)
     end
 
     ips.report("FastCondition") do |n|
-      signal_benchmark(FastCondition, n)
+      Trigger.benchmark(FastCondition, n)
     end
   end
 end
